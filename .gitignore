@@ -1,0 +1,78 @@
+# Dependencies
+node_modules/
+
+# Node.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+coverage/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+
+# Environment / secrets — never commit keys
+.env
+.env.*
+!.env.example
+
+# Do not commit the local JSON key
+*.json
+credentials.json
+# ...but DO track the app package manifests + tooling configs (the broad
+# `*.json` rule above is for credentials; these are required for the build and
+# the Domain 9 deploy gate). Same negation pattern as `!**/terraform.tfvars`.
+!**/package.json
+!**/package-lock.json
+!**/tsconfig.json
+
+# Terraform
+infra/.terraform/
+infra/.terraform.lock.hcl
+infra/.terraform.lock.hcl.bak
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+*.tfvars
+!infra/terraform.tfvars
+!terraform.tfvars
+!**/terraform.tfvars
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Cloud / GCP
+gcloud/
+*.gke.backup
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs
+logs/
+*.log
+
+# plan-view.html
+plan-view.html
+
+# Nuxt build output
+.nuxt/
+.output/
+
+
+
+# CUSTOM
+.DS_Store
+
+/docs
+/docs_local
