@@ -42,6 +42,25 @@ gcloud config get-value project
 gcloud config list
 ```
 
+## Laravel Cloud
+
+<https://laravel.com/cloud/docs/api/cli#browser-authentication>
+
+```bash
+# Browser authentication
+cloud auth
+
+# Token authentication
+# Add a token
+cloud auth:token --add
+
+# List stored tokens
+cloud auth:token --list
+
+# Remove a token
+cloud auth:token --remove
+```
+
 ## Terraform CLI (init and daily commands)
 
 **Recommended:** use the wrapper script **`./tf.sh`** from the `machec-gcp` repo root.
