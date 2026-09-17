@@ -69,10 +69,7 @@ plan-view.html
 .nuxt/
 .output/
 
-
-
 # CUSTOM
-.DS_Store
-
+.ai
 /docs
 /docs_local
