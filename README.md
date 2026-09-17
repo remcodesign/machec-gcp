@@ -61,6 +61,45 @@ cloud auth:token --list
 cloud auth:token --remove
 ```
 
+### Object storage — viewing the shared bucket's contents
+
+`machec-shared-storage` (Step 1.3) is Laravel Cloud's own object-storage
+product — a **Cloudflare R2** bucket, unrelated to GCP Cloud Storage. It is
+provisioned but deliberately **unmounted**: no app's environment has its
+credentials wired in yet, because its only planned consumer is `pim-core`'s
+product-image pipeline (D28/D31), which is Post-V1 and not built. Don't
+attach it to `customer-identity` (or any other app) just to browse it — none
+of the four apps has code that reads/writes it, and D37's per-app isolation
+means a resource should only be wired into the one app that actually owns
+it. Since it's genuinely empty today, there's nothing an app-level mount
+would show you anyway.
+
+To inspect it directly instead, R2 is S3-compatible — point any S3 client at
+it using the bucket's own access key (Step 1.3's `bucket:create
+--key-name=machec-shared-storage-key`), no Laravel app involved:
+
+```bash
+# Bucket id + endpoint (R2's own hostname, not a GCP URL):
+cloud bucket:list --json -n | jq '.[] | select(.name == "machec-shared-storage")'
+
+# Access key id + secret (secret is only ever shown once, at bucket-key:create
+# time, or here if this CLI version's --json output includes it — never paste
+# it into a committed file or chat log):
+cloud bucket-key:list <bucket-id> --json -n
+```
+
+Then, with any S3-compatible client:
+
+```bash
+aws s3 ls s3://machec-shared-storage \
+  --endpoint-url=<endpoint from bucket:list above> \
+  --profile machec-r2   # a throwaway AWS CLI profile holding the R2 access key/secret above
+```
+
+(Or a GUI client — Cyberduck, Transmit, `rclone` — configured as a generic
+S3 endpoint with the same three values: endpoint, access key id, secret
+access key.)
+
 ## Terraform CLI (init and daily commands)
 
 **Recommended:** use the wrapper script **`./tf.sh`** from the `machec-gcp` repo root.
