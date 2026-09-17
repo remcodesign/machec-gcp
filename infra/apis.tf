@@ -7,6 +7,7 @@ locals {
     "storage.googleapis.com",
     "iam.googleapis.com",
     "artifactregistry.googleapis.com",
+    "secretmanager.googleapis.com",
   ]
 }
 
