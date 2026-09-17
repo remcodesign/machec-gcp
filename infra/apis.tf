@@ -6,6 +6,7 @@ locals {
     "bigquery.googleapis.com",
     "storage.googleapis.com",
     "iam.googleapis.com",
+    "artifactregistry.googleapis.com",
   ]
 }
 

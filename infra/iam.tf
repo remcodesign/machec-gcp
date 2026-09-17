@@ -26,3 +26,29 @@ resource "google_service_account" "laravel_cloud_gcp_bridge" {
 resource "google_service_account_key" "laravel_cloud_gcp_bridge" {
   service_account_id = google_service_account.laravel_cloud_gcp_bridge.name
 }
+
+# A third, distinct identity from terraform_ci and laravel_cloud_gcp_bridge
+# above: attached directly to the BFF's future Cloud Run service (Domain 4
+# Step 4.0) and authenticating via Cloud Run's built-in Workload Identity —
+# never a JSON key. D4's reason for a static key ("Laravel Cloud doesn't run
+# inside GCP") doesn't apply here, since Cloud Run is GCP (D84).
+
+resource "google_service_account" "bff_runtime" {
+  account_id   = "bff-runtime"
+  display_name = "BFF Runtime"
+  description  = "Keyless, Workload-Identity-only identity the BFF's Cloud Run service runs as (D84). Never issued a JSON key."
+
+  depends_on = [google_project_service.required["iam.googleapis.com"]]
+}
+
+resource "google_project_iam_member" "bff_runtime_firestore" {
+  project = var.project_id
+  role    = "roles/datastore.user"
+  member  = "serviceAccount:${google_service_account.bff_runtime.email}"
+}
+
+resource "google_project_iam_member" "bff_runtime_artifact_registry" {
+  project = var.project_id
+  role    = "roles/artifactregistry.reader"
+  member  = "serviceAccount:${google_service_account.bff_runtime.email}"
+}
