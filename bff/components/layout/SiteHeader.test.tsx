@@ -3,9 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import type { AuthUser } from "@/types/auth";
 
 const useAuthMock = vi.fn();
+const usePathnameMock = vi.fn(() => "/");
 
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => useAuthMock(),
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => usePathnameMock(),
 }));
 
 const { SiteHeader } = await import("./SiteHeader");
@@ -63,6 +68,25 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "Winkelmand" })).toHaveAttribute(
       "href",
       "/cart",
+    );
+  });
+
+  it("marks Producten as the active nav link on /products and on a product detail page", () => {
+    useAuthMock.mockReturnValue({
+      user: null,
+      isLoading: false,
+      logout: vi.fn(),
+    });
+    usePathnameMock.mockReturnValue("/products/prod_12");
+
+    render(<SiteHeader />);
+
+    expect(screen.getByRole("link", { name: "Producten" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("link", { name: "Home" })).not.toHaveAttribute(
+      "aria-current",
     );
   });
 });

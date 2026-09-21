@@ -26,7 +26,7 @@ export function ProductDetail({ category, product }: ProductDetailProps) {
 
   return (
     <article className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.9fr)] lg:gap-14">
-      <GhostImage alt={product.name} size="lg" />
+      <GhostImage alt={product.name} size="lg" priority />
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
           {product.brand}

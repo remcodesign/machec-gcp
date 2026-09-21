@@ -1,11 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { useAuth } from "@/hooks/useAuth";
 
+function navLinkClassName(isActive: boolean): string {
+  const base = "border-b-2 pb-1 transition-colors hover:text-stone-950";
+
+  return isActive
+    ? `${base} border-stone-950 text-stone-950`
+    : `${base} border-transparent`;
+}
+
 export function SiteHeader() {
   const { isLoading, logout, user } = useAuth();
+  const pathname = usePathname();
+  const isHomeActive = pathname === "/";
+  const isProductsActive = pathname === "/products" || pathname.startsWith("/products/");
+  const isCartActive = pathname === "/cart";
 
   return (
     <header className="border-b border-stone-200 bg-[#fffdf8]">
@@ -20,16 +33,25 @@ export function SiteHeader() {
           className="flex items-center gap-5 text-sm font-medium text-stone-600"
           aria-label="Hoofdnavigatie"
         >
-          <Link className="transition-colors hover:text-stone-950" href="/">
+          <Link
+            className={navLinkClassName(isHomeActive)}
+            href="/"
+            aria-current={isHomeActive ? "page" : undefined}
+          >
             Home
           </Link>
           <Link
-            className="transition-colors hover:text-stone-950"
+            className={navLinkClassName(isProductsActive)}
             href="/products"
+            aria-current={isProductsActive ? "page" : undefined}
           >
             Producten
           </Link>
-          <Link className="transition-colors hover:text-stone-950" href="/cart">
+          <Link
+            className={navLinkClassName(isCartActive)}
+            href="/cart"
+            aria-current={isCartActive ? "page" : undefined}
+          >
             Winkelmand
           </Link>
           {user ? (

@@ -37,7 +37,7 @@ describe("pimClient", () => {
 
   it("getProducts sends the Bearer token and forces status=published regardless of caller input", async () => {
     fetchMock.mockResolvedValueOnce(
-      jsonResponse({ data: [validProduct], meta: { total: 1 } }),
+      jsonResponse({ data: [validProduct], current_page: 1, last_page: 1, per_page: 6, total: 1 }),
     );
 
     await getProducts({ status: "draft" } as never);
@@ -56,7 +56,10 @@ describe("pimClient", () => {
           validProduct,
           { ...validProduct, sku: "SKU-2", status: "draft" },
         ],
-        meta: { total: 2 },
+        current_page: 1,
+        last_page: 1,
+        per_page: 6,
+        total: 2,
       }),
     );
 
@@ -70,7 +73,10 @@ describe("pimClient", () => {
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
         data: [validProduct, { ...validProduct, sku: "SKU-10" }],
-        meta: { total: 2 },
+        current_page: 1,
+        last_page: 1,
+        per_page: 6,
+        total: 2,
       }),
     );
 
@@ -81,12 +87,37 @@ describe("pimClient", () => {
 
   it("getProduct returns null, not a crash, when no product matches", async () => {
     fetchMock.mockResolvedValueOnce(
-      jsonResponse({ data: [], meta: { total: 0 } }),
+      jsonResponse({ data: [], current_page: 1, last_page: 0, per_page: 6, total: 0 }),
     );
 
     const result = await getProduct("MISSING-SKU");
 
     expect(result).toBeNull();
+  });
+
+  it("getProducts reads pagination meta from PIM's flat LengthAwarePaginator response, not a nested meta key", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({
+        data: [validProduct],
+        current_page: 2,
+        last_page: 2,
+        per_page: 6,
+        total: 12,
+        from: 7,
+        to: 12,
+      }),
+    );
+
+    const result = await getProducts({ page: 2 });
+
+    expect(result.meta).toEqual({
+      current_page: 2,
+      last_page: 2,
+      per_page: 6,
+      total: 12,
+      from: 7,
+      to: 12,
+    });
   });
 
   it("an HTTP error from PIM throws a client error carrying the status instead of returning a broken payload", async () => {
@@ -97,7 +128,7 @@ describe("pimClient", () => {
 
   it("a malformed product (missing a required field) throws instead of silently rendering broken data", async () => {
     fetchMock.mockResolvedValueOnce(
-      jsonResponse({ data: [{ sku: "SKU-1" }], meta: { total: 1 } }),
+      jsonResponse({ data: [{ sku: "SKU-1" }], current_page: 1, last_page: 1, per_page: 6, total: 1 }),
     );
 
     await expect(getProducts()).rejects.toThrow(/invalid/i);
@@ -113,7 +144,10 @@ describe("pimClient", () => {
             filterable_attributes: ["component_type", "amperage"],
           },
         ],
-        meta: { total: 1 },
+        current_page: 1,
+        last_page: 1,
+        per_page: 6,
+        total: 1,
       }),
     );
 
@@ -126,7 +160,10 @@ describe("pimClient", () => {
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
         data: [{ slug: "x", name: "X", filterable_attributes: "not-an-array" }],
-        meta: { total: 1 },
+        current_page: 1,
+        last_page: 1,
+        per_page: 6,
+        total: 1,
       }),
     );
     await expect(getCategories()).rejects.toThrow(/filterable_attributes/);

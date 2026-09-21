@@ -3,6 +3,7 @@ import Image from "next/image";
 interface GhostImageProps {
   alt?: string;
   size?: "sm" | "md" | "lg";
+  priority?: boolean;
 }
 
 const sizes = {
@@ -14,6 +15,7 @@ const sizes = {
 export function GhostImage({
   alt = "Productafbeelding",
   size = "md",
+  priority = false,
 }: GhostImageProps) {
   const imageSize = sizes[size];
 
@@ -27,6 +29,7 @@ export function GhostImage({
         fill
         sizes={`${imageSize.pixels}px`}
         className="object-cover"
+        priority={priority}
       />
     </div>
   );

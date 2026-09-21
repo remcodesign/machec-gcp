@@ -23,4 +23,17 @@ describe("GhostImage", () => {
     const { container: lg } = render(<GhostImage size="lg" />);
     expect(lg.querySelector(".h-96")).toBeInTheDocument();
   });
+
+  it("lazy-loads by default and only eager-loads when marked priority", () => {
+    const { rerender } = render(<GhostImage alt="Test product" />);
+    expect(screen.getByRole("img", { name: "Test product" })).toHaveAttribute(
+      "loading",
+      "lazy",
+    );
+
+    rerender(<GhostImage alt="Test product" priority />);
+    expect(
+      screen.getByRole("img", { name: "Test product" }),
+    ).not.toHaveAttribute("loading");
+  });
 });

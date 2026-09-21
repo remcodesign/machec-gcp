@@ -176,7 +176,14 @@ function listPayload(value: unknown): { data: unknown[]; meta: unknown } {
     throw new PimClientError("PIM returned an invalid list response.");
   }
 
-  return { data: value.data, meta: value.meta };
+  // Laravel's LengthAwarePaginator serializes current_page/last_page/per_page/
+  // total/from/to as siblings of "data" at the top level, not nested under a
+  // "meta" key — there is no JSON:API-style wrapper here, so build meta from
+  // whatever else is on the response instead of a "meta" property that never
+  // actually exists on PIM Core's paginated responses.
+  const { data, ...meta } = value;
+
+  return { data: data as unknown[], meta };
 }
 
 function productList(value: unknown): ProductListResponse {
