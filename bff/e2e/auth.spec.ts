@@ -45,7 +45,9 @@ test("a customer logs in through the UI and the BFF sets its own session cookie,
   await expect(page).toHaveURL("/");
 
   // Log out, then log back in through the actual login form.
-  await page.getByRole("button", { name: /accountmenu van e2e login/i }).click();
+  await page
+    .getByRole("button", { name: /accountmenu van e2e login/i })
+    .click();
   await page.getByRole("menuitem", { name: "Uitloggen" }).click();
   await expect(page).toHaveURL("/");
   await expect(page.getByRole("link", { name: "Inloggen" })).toBeVisible();
@@ -77,14 +79,16 @@ test("clicking Logout in AccountMenu calls the logout proxy, clears the session,
   await page.getByRole("button", { name: "Account aanmaken" }).click();
   await expect(page).toHaveURL("/");
 
-  await page.getByRole("button", { name: /accountmenu van e2e logout/i }).click();
+  await page
+    .getByRole("button", { name: /accountmenu van e2e logout/i })
+    .click();
   await page.getByRole("menuitem", { name: "Uitloggen" }).click();
 
   await expect(page).toHaveURL("/");
   await expect(page.getByRole("link", { name: "Inloggen" })).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: /accountmenu/i }),
-  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /accountmenu/i })).toHaveCount(
+    0,
+  );
 
   const cookies = await page.context().cookies();
   const relay = cookies.find((c) => c.name === "machec_session");
@@ -95,10 +99,9 @@ test("the login page links to register and the register page links back to login
   page,
 }) => {
   await page.goto("/login");
-  await expect(page.getByRole("link", { name: "Account aanmaken" })).toHaveAttribute(
-    "href",
-    "/register",
-  );
+  await expect(
+    page.getByRole("link", { name: "Account aanmaken" }),
+  ).toHaveAttribute("href", "/register");
 
   await page.goto("/register");
   await expect(

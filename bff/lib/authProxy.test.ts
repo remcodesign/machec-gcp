@@ -182,15 +182,13 @@ describe("proxyCurrentUser", () => {
 
   it("resolves the current user when a relay cookie is present", async () => {
     cookieStore.set("machec_session", "identity-session-value");
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          customer_id: 1,
-          name: "Test",
-          email: "test@example.com",
-        }),
-      );
+    const fetchMock = vi.fn().mockResolvedValueOnce(
+      jsonResponse({
+        customer_id: 1,
+        name: "Test",
+        email: "test@example.com",
+      }),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     const response = await proxyCurrentUser();

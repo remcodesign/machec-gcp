@@ -30,6 +30,12 @@ Then for the next.js server
 npm run dev
 ```
 
+Test E2E
+
+```bash
+npm run e2e
+```
+
 The emulator UI is available at [http://localhost:4001](http://localhost:4001) (mapped from the
 container's port 4000 to sidestep local port-4000 conflicts, e.g. a stale
 Docker port-proxy from a previous run). Firestore listens on port 8080 and

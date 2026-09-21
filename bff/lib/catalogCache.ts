@@ -77,7 +77,7 @@ async function cached<T>(
   return payload;
 }
 
-function createCatalogCache(
+export function createCatalogCache(
   dependencies: CatalogCacheDependencies = {
     firestore: getFirestoreClient(),
     pim: { getCategories, getProduct, getProducts },
