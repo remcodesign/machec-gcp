@@ -7,6 +7,8 @@ resource "google_cloud_run_v2_service" "bff" {
   name     = "bff"
   location = var.region
 
+  deletion_protection = true
+
   template {
     service_account                  = google_service_account.bff_runtime.email
     timeout                          = "300s"
