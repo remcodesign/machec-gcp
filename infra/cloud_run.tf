@@ -37,6 +37,11 @@ resource "google_cloud_run_v2_service" "bff" {
       }
 
       env {
+        name  = "IDENTITY_SESSION_COOKIE"
+        value = var.identity_session_cookie
+      }
+
+      env {
         name = "CATALOG_READ_TOKEN"
 
         value_source {

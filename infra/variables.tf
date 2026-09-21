@@ -30,3 +30,9 @@ variable "customer_identity_url" {
   type        = string
   default     = "https://machec-customer-identity-production-pi9kvt.laravel.cloud"
 }
+
+variable "identity_session_cookie" {
+  description = "Customer & Identity's actual session cookie name in production, injected into the BFF Cloud Run service as IDENTITY_SESSION_COOKIE (D115's relay reads this cookie out of Identity's Set-Cookie response). Laravel's config/session.php derives it as Str::slug(APP_NAME).'-session' — production APP_NAME is not 'Laravel' (local ddev's value, which authProxy.ts's own hardcoded fallback assumes), so it resolves to 'machec-customer-identity-session' instead, and must be set explicitly here rather than relying on that fallback."
+  type        = string
+  default     = "machec-customer-identity-session"
+}

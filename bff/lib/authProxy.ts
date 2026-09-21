@@ -2,10 +2,13 @@ import { cookies, headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 const BFF_SESSION_COOKIE = "machec_session";
-// customer-identity's config/session.php default is
-// Str::slug(env('APP_NAME', 'laravel')) . '-session' — with APP_NAME=Laravel
-// that's "laravel-session" (hyphen), not the Laravel-starter-kit default
-// "laravel_session" (underscore).
+// customer-identity's config/session.php derives its cookie name as
+// Str::slug(env('APP_NAME', 'laravel')) . '-session' — this fallback only
+// matches local ddev, where APP_NAME=Laravel gives "laravel-session"
+// (hyphen, not the Laravel-starter-kit default "laravel_session" with an
+// underscore). Production's APP_NAME differs (real cookie:
+// "machec-customer-identity-session"), so IDENTITY_SESSION_COOKIE MUST be
+// set explicitly there — see infra/variables.tf's identity_session_cookie.
 const IDENTITY_SESSION_COOKIE = "laravel-session";
 const XSRF_COOKIE = "XSRF-TOKEN";
 const IDENTITY_REQUEST_TIMEOUT_MS = 5000;
