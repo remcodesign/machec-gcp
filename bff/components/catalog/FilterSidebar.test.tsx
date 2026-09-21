@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FilterSidebar } from "./FilterSidebar";
-import type { Category } from "@/types/catalog";
+import type { Category, CatalogFacets } from "@/types/catalog";
 
 const pushMock = vi.fn();
 let currentSearchParams = new URLSearchParams("");
@@ -26,6 +26,23 @@ const categories: Category[] = [
   },
 ];
 
+// getCatalogFacets() fixture — mirrors what a page.tsx passes down after
+// Promise.all([getCatalogProducts, getCatalogFacets]). Values here don't
+// need to line up with what a test's fireEvent.change sends (the select's
+// onChange handler reads event.target.value directly, unconstrained by
+// which <option> elements happen to be rendered) — this stands in for
+// "whatever PIM Core says is currently reachable."
+const facets: CatalogFacets = {
+  brand: ["ABB", "Gira"],
+  category: ["groepenkast-componenten", "installatiemateriaal"],
+  price_range: { min: 999, max: 9999 },
+  attributes: {
+    component_type: ["Aardlekschakelaar", "Installatieautomaat"],
+    amperage: ["16A", "40A"],
+    material_type: ["Lasdoppen"],
+  },
+};
+
 describe("FilterSidebar", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -42,7 +59,12 @@ describe("FilterSidebar", () => {
 
   it("with no category selected, shows only global filters (category, brand, price)", () => {
     render(
-      <FilterSidebar categories={categories} filters={{}} path="/products" />,
+      <FilterSidebar
+        categories={categories}
+        facets={facets}
+        filters={{}}
+        path="/products"
+      />,
     );
 
     expect(screen.getByText("Categorie")).toBeInTheDocument();
@@ -55,6 +77,7 @@ describe("FilterSidebar", () => {
     render(
       <FilterSidebar
         categories={categories}
+        facets={facets}
         filters={{ category: "groepenkast-componenten" }}
         path="/categories/groepenkast-componenten"
       />,
@@ -68,6 +91,7 @@ describe("FilterSidebar", () => {
     render(
       <FilterSidebar
         categories={categories}
+        facets={facets}
         filters={{ category: "installatiemateriaal" }}
         path="/categories/installatiemateriaal"
       />,
@@ -76,6 +100,43 @@ describe("FilterSidebar", () => {
     expect(screen.getByText("Type materiaal")).toBeInTheDocument();
     expect(screen.queryByText("Amperage")).not.toBeInTheDocument();
     expect(screen.queryByText("Type component")).not.toBeInTheDocument();
+  });
+
+  it("the category select only lists categories facets.category says are still reachable given the current selection", () => {
+    render(
+      <FilterSidebar
+        categories={categories}
+        facets={{ ...facets, category: ["groepenkast-componenten"] }}
+        filters={{ brand: "ABB" }}
+        path="/products"
+      />,
+    );
+
+    const categorySelect = screen.getByLabelText("Categorie");
+    const optionLabels = Array.from(
+      categorySelect.querySelectorAll("option"),
+    ).map((option) => option.textContent);
+
+    expect(optionLabels).toContain("Groepenkasten");
+    expect(optionLabels).not.toContain("Installatiemateriaal");
+  });
+
+  it("the currently-selected category stays listed even if facets.category would otherwise exclude it", () => {
+    render(
+      <FilterSidebar
+        categories={categories}
+        facets={{ ...facets, category: [] }}
+        filters={{ category: "installatiemateriaal" }}
+        path="/categories/installatiemateriaal"
+      />,
+    );
+
+    const categorySelect = screen.getByLabelText("Categorie");
+    const optionLabels = Array.from(
+      categorySelect.querySelectorAll("option"),
+    ).map((option) => option.textContent);
+
+    expect(optionLabels).toContain("Installatiemateriaal");
   });
 
   it("a category's own filterable_attributes (live category data) drives which attribute selects render, not a static list", () => {
@@ -94,6 +155,7 @@ describe("FilterSidebar", () => {
     render(
       <FilterSidebar
         categories={categoriesWithNewAttribute}
+        facets={facets}
         filters={{ category: "groepenkast-componenten" }}
         path="/categories/groepenkast-componenten"
       />,
@@ -108,6 +170,7 @@ describe("FilterSidebar", () => {
     render(
       <FilterSidebar
         categories={categories}
+        facets={facets}
         filters={{ brand: "ABB", category: "groepenkast-componenten" }}
         path="/products"
       />,
@@ -120,7 +183,12 @@ describe("FilterSidebar", () => {
 
   it("changing the brand select applies the filter immediately, with no separate submit step", () => {
     render(
-      <FilterSidebar categories={categories} filters={{}} path="/products" />,
+      <FilterSidebar
+        categories={categories}
+        facets={facets}
+        filters={{}}
+        path="/products"
+      />,
     );
 
     fireEvent.change(screen.getByLabelText("Merk"), {
@@ -134,6 +202,7 @@ describe("FilterSidebar", () => {
     render(
       <FilterSidebar
         categories={categories}
+        facets={facets}
         filters={{ category: "groepenkast-componenten", amperage: "16A" }}
         path="/products"
       />,
@@ -152,6 +221,7 @@ describe("FilterSidebar", () => {
     render(
       <FilterSidebar
         categories={categories}
+        facets={facets}
         filters={{ category: "groepenkast-componenten", amperage: "16A" }}
         path="/categories/groepenkast-componenten"
       />,
@@ -168,6 +238,7 @@ describe("FilterSidebar", () => {
     render(
       <FilterSidebar
         categories={categories}
+        facets={facets}
         filters={{ category: "groepenkast-componenten" }}
         path="/categories/groepenkast-componenten"
       />,
@@ -182,7 +253,12 @@ describe("FilterSidebar", () => {
 
   it("typing in the price inputs debounces the applied filter instead of firing on every keystroke", () => {
     render(
-      <FilterSidebar categories={categories} filters={{}} path="/products" />,
+      <FilterSidebar
+        categories={categories}
+        facets={facets}
+        filters={{}}
+        path="/products"
+      />,
     );
 
     fireEvent.change(screen.getByPlaceholderText("Vanaf"), {
@@ -209,7 +285,12 @@ describe("FilterSidebar", () => {
 
   it("typing a comma-decimal euro amount (the Dutch locale's own decimal separator) converts correctly to price_cents", () => {
     render(
-      <FilterSidebar categories={categories} filters={{}} path="/products" />,
+      <FilterSidebar
+        categories={categories}
+        facets={facets}
+        filters={{}}
+        path="/products"
+      />,
     );
 
     fireEvent.change(screen.getByPlaceholderText("Vanaf"), {
@@ -225,6 +306,7 @@ describe("FilterSidebar", () => {
     render(
       <FilterSidebar
         categories={categories}
+        facets={facets}
         filters={{ price_min: "4495" }}
         path="/products"
       />,
@@ -238,6 +320,7 @@ describe("FilterSidebar", () => {
     render(
       <FilterSidebar
         categories={categories}
+        facets={facets}
         filters={{ page: 2 }}
         path="/products"
       />,
@@ -254,6 +337,7 @@ describe("FilterSidebar", () => {
     render(
       <FilterSidebar
         categories={categories}
+        facets={facets}
         filters={{ brand: "ABB" }}
         path="/products"
       />,
@@ -282,6 +366,7 @@ describe("FilterSidebar", () => {
     render(
       <FilterSidebar
         categories={categories}
+        facets={facets}
         filters={{ brand: "ABB" }}
         path="/products"
       />,

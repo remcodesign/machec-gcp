@@ -11,6 +11,10 @@ export const getCatalogProducts = cache((filters: CatalogFilters = {}) =>
   catalogCache.getProducts(filters),
 );
 
+export const getCatalogFacets = cache((filters: CatalogFilters = {}) =>
+  catalogCache.getFacets(filters),
+);
+
 export const getCatalogProduct = cache((sku: string) =>
   catalogCache.getProduct(sku),
 );

@@ -17,7 +17,8 @@ export function SiteHeader() {
   const { isLoading, logout, user } = useAuth();
   const pathname = usePathname();
   const isHomeActive = pathname === "/";
-  const isProductsActive = pathname === "/products" || pathname.startsWith("/products/");
+  const isProductsActive =
+    pathname === "/products" || pathname.startsWith("/products/");
   const isCartActive = pathname === "/cart";
 
   return (

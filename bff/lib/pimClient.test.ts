@@ -37,7 +37,13 @@ describe("pimClient", () => {
 
   it("getProducts sends the Bearer token and forces status=published regardless of caller input", async () => {
     fetchMock.mockResolvedValueOnce(
-      jsonResponse({ data: [validProduct], current_page: 1, last_page: 1, per_page: 6, total: 1 }),
+      jsonResponse({
+        data: [validProduct],
+        current_page: 1,
+        last_page: 1,
+        per_page: 6,
+        total: 1,
+      }),
     );
 
     await getProducts({ status: "draft" } as never);
@@ -87,7 +93,13 @@ describe("pimClient", () => {
 
   it("getProduct returns null, not a crash, when no product matches", async () => {
     fetchMock.mockResolvedValueOnce(
-      jsonResponse({ data: [], current_page: 1, last_page: 0, per_page: 6, total: 0 }),
+      jsonResponse({
+        data: [],
+        current_page: 1,
+        last_page: 0,
+        per_page: 6,
+        total: 0,
+      }),
     );
 
     const result = await getProduct("MISSING-SKU");
@@ -128,7 +140,13 @@ describe("pimClient", () => {
 
   it("a malformed product (missing a required field) throws instead of silently rendering broken data", async () => {
     fetchMock.mockResolvedValueOnce(
-      jsonResponse({ data: [{ sku: "SKU-1" }], current_page: 1, last_page: 1, per_page: 6, total: 1 }),
+      jsonResponse({
+        data: [{ sku: "SKU-1" }],
+        current_page: 1,
+        last_page: 1,
+        per_page: 6,
+        total: 1,
+      }),
     );
 
     await expect(getProducts()).rejects.toThrow(/invalid/i);

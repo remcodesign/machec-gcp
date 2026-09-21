@@ -35,6 +35,21 @@ describe("ProductDetail", () => {
     expect(screen.getAllByRole("term")).toHaveLength(2);
   });
 
+  it("links the category name back to its own category page", () => {
+    render(<ProductDetail category={category} product={product} />);
+
+    expect(screen.getByRole("link", { name: category.name })).toHaveAttribute(
+      "href",
+      "/categories/groepenkast-componenten",
+    );
+  });
+
+  it("renders nothing category-related when no category resolves (e.g. an unknown category_slug)", () => {
+    render(<ProductDetail product={product} />);
+
+    expect(screen.queryByRole("link", { name: /./ })).not.toBeInTheDocument();
+  });
+
   it("shows stock when defined and zero as out of stock", () => {
     const { rerender } = render(
       <ProductDetail category={category} product={{ ...product, stock: 0 }} />,

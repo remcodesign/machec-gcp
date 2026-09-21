@@ -1,6 +1,7 @@
 import type {
   Category,
   CategoryListResponse,
+  CatalogFacets,
   CatalogFilters,
   PaginationMeta,
   Product,
@@ -135,6 +136,48 @@ function categoryValue(value: unknown): Category {
   }
 
   return category;
+}
+
+function stringArray(value: unknown, field: string): string[] {
+  if (
+    !Array.isArray(value) ||
+    !value.every((entry) => typeof entry === "string")
+  ) {
+    throw new PimClientError(`PIM response field ${field} is invalid.`);
+  }
+
+  return value;
+}
+
+function nullableNumber(value: unknown, field: string): number | null {
+  if (value === null) return null;
+
+  return numberValue(value, field);
+}
+
+function facetsValue(value: unknown): CatalogFacets {
+  if (
+    !isRecord(value) ||
+    !isRecord(value.price_range) ||
+    !isRecord(value.attributes)
+  ) {
+    throw new PimClientError("PIM returned an invalid facets response.");
+  }
+
+  return {
+    brand: stringArray(value.brand, "brand"),
+    category: stringArray(value.category, "category"),
+    price_range: {
+      min: nullableNumber(value.price_range.min, "price_range.min"),
+      max: nullableNumber(value.price_range.max, "price_range.max"),
+    },
+    attributes: Object.fromEntries(
+      Object.entries(value.attributes).map(([key, entry]) => [
+        key,
+        stringArray(entry, `attributes.${key}`),
+      ]),
+    ),
+  };
 }
 
 function paginationMeta(value: unknown, count: number): PaginationMeta {
@@ -288,4 +331,18 @@ export async function getProduct(sku: string): Promise<Product | null> {
 
 export async function getCategories(): Promise<CategoryListResponse> {
   return categoryList(await request("categories"));
+}
+
+// Only category/brand/price/attribute filters are meaningful to a facets
+// query — sort/page change what page of an already-resolved result set is
+// shown, never which values are still reachable, so both are dropped here
+// rather than forwarded as dead query params PIM Core would just ignore.
+export async function getFacets(
+  filters: CatalogFilters = {},
+): Promise<CatalogFacets> {
+  const facetFilters = Object.fromEntries(
+    Object.entries(filters).filter(([key]) => key !== "sort" && key !== "page"),
+  ) as CatalogFilters;
+
+  return facetsValue(await request("facets", filtersQuery(facetFilters)));
 }

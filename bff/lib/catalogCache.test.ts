@@ -99,7 +99,12 @@ describe("catalogCache", () => {
     const getProducts = vi.fn().mockResolvedValue(productListResponse);
     const cache = createCatalogCache({
       firestore: firestore as never,
-      pim: { getCategories: vi.fn(), getProduct: vi.fn(), getProducts },
+      pim: {
+        getCategories: vi.fn(),
+        getProduct: vi.fn(),
+        getProducts,
+        getFacets: vi.fn(),
+      },
       ttlSeconds: 60,
     });
 
@@ -116,7 +121,12 @@ describe("catalogCache", () => {
     const getProducts = vi.fn().mockResolvedValue(productListResponse);
     const cache = createCatalogCache({
       firestore: firestore as never,
-      pim: { getCategories: vi.fn(), getProduct: vi.fn(), getProducts },
+      pim: {
+        getCategories: vi.fn(),
+        getProduct: vi.fn(),
+        getProducts,
+        getFacets: vi.fn(),
+      },
       ttlSeconds: 60,
     });
 
@@ -131,7 +141,12 @@ describe("catalogCache", () => {
     const getProducts = vi.fn().mockResolvedValue(productListResponse);
     const cache = createCatalogCache({
       firestore: firestore as never,
-      pim: { getCategories: vi.fn(), getProduct: vi.fn(), getProducts },
+      pim: {
+        getCategories: vi.fn(),
+        getProduct: vi.fn(),
+        getProducts,
+        getFacets: vi.fn(),
+      },
       ttlSeconds: -1, // already expired the instant it's written
     });
 
@@ -146,7 +161,12 @@ describe("catalogCache", () => {
     const getProducts = vi.fn().mockResolvedValue(productListResponse);
     const cache = createCatalogCache({
       firestore: firestore as never,
-      pim: { getCategories: vi.fn(), getProduct: vi.fn(), getProducts },
+      pim: {
+        getCategories: vi.fn(),
+        getProduct: vi.fn(),
+        getProducts,
+        getFacets: vi.fn(),
+      },
       ttlSeconds: 60,
     });
 
@@ -164,7 +184,12 @@ describe("catalogCache", () => {
     const getProducts = vi.fn().mockResolvedValue(productListResponse);
     const cache = createCatalogCache({
       firestore: firestore as never,
-      pim: { getCategories: vi.fn(), getProduct: vi.fn(), getProducts },
+      pim: {
+        getCategories: vi.fn(),
+        getProduct: vi.fn(),
+        getProducts,
+        getFacets: vi.fn(),
+      },
       ttlSeconds: 60,
     });
 
@@ -179,7 +204,12 @@ describe("catalogCache", () => {
     const getProducts = vi.fn().mockResolvedValue(productListResponse);
     const cache = createCatalogCache({
       firestore: firestore as never,
-      pim: { getCategories: vi.fn(), getProduct: vi.fn(), getProducts },
+      pim: {
+        getCategories: vi.fn(),
+        getProduct: vi.fn(),
+        getProducts,
+        getFacets: vi.fn(),
+      },
       ttlSeconds: 60,
     });
 
@@ -200,7 +230,12 @@ describe("catalogCache", () => {
     const getCategories = vi.fn().mockResolvedValue(categoryListResponse);
     const cache = createCatalogCache({
       firestore: firestore as never,
-      pim: { getCategories, getProduct: vi.fn(), getProducts: vi.fn() },
+      pim: {
+        getCategories,
+        getProduct: vi.fn(),
+        getProducts: vi.fn(),
+        getFacets: vi.fn(),
+      },
       ttlSeconds: 60,
     });
 
@@ -218,7 +253,12 @@ describe("catalogCache", () => {
     const getProduct = vi.fn().mockResolvedValue(product);
     const cache = createCatalogCache({
       firestore: firestore as never,
-      pim: { getCategories: vi.fn(), getProduct, getProducts: vi.fn() },
+      pim: {
+        getCategories: vi.fn(),
+        getProduct,
+        getProducts: vi.fn(),
+        getFacets: vi.fn(),
+      },
       ttlSeconds: 60,
     });
 
@@ -235,7 +275,12 @@ describe("catalogCache", () => {
     const getProduct = vi.fn().mockResolvedValue(product);
     const cache = createCatalogCache({
       firestore: firestore as never,
-      pim: { getCategories: vi.fn(), getProduct, getProducts: vi.fn() },
+      pim: {
+        getCategories: vi.fn(),
+        getProduct,
+        getProducts: vi.fn(),
+        getFacets: vi.fn(),
+      },
       ttlSeconds: 60,
     });
 

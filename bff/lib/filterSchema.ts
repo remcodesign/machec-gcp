@@ -1,7 +1,10 @@
-// Which attribute keys are filterable per category lives on the category
-// itself (Category.filterable_attributes, from PIM Core's own category
-// record via getCatalogCategories()'s D40 cache-aside) — not declared here,
-// so nothing in this file drifts the moment PIM Core's admin adds a new one.
+// Which attribute keys are filterable per category, and which values each
+// one currently offers, both live on live PIM data now — filterable_attributes
+// on the category record, option values on getCatalogFacets() (D40 cache-aside
+// extension) — not declared here, so nothing in this file drifts the moment
+// PIM Core's admin adds a category/attribute or a product's brand/attribute
+// values change. Only the Dutch label text stays static — there's no live
+// source for UI copy.
 export const filterLabels: Record<string, string> = {
   category: "Categorie",
   brand: "Merk",
@@ -14,15 +17,3 @@ export const filterLabels: Record<string, string> = {
   cores_and_thickness: "Aders en dikte",
   material_type: "Type materiaal",
 };
-
-export const catalogBrands = [
-  "ABB",
-  "Attema",
-  "Busch-Jaeger",
-  "Donné",
-  "EMAT",
-  "Gira",
-  "Nexans",
-  "Pipelife",
-  "Wago",
-];

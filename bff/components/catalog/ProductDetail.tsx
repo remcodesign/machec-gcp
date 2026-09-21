@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { GhostImage } from "@/components/catalog/GhostImage";
 import { formatPrice } from "@/lib/formatPrice";
 import type { Category, Product } from "@/types/catalog";
@@ -28,7 +29,15 @@ export function ProductDetail({ category, product }: ProductDetailProps) {
     <article className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.9fr)] lg:gap-14">
       <GhostImage alt={product.name} size="lg" priority />
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
+        {category && (
+          <Link
+            href={`/categories/${category.slug}`}
+            className="text-sm text-stone-500 hover:text-stone-950"
+          >
+            {category.name}
+          </Link>
+        )}
+        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
           {product.brand}
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-stone-950 sm:text-4xl">

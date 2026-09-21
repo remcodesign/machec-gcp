@@ -5,7 +5,11 @@ import { Pagination } from "@/components/catalog/Pagination";
 import { ProductCardSkeleton } from "@/components/catalog/ProductCardSkeleton";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { ResultsBar } from "@/components/catalog/ResultsBar";
-import { getCatalogCategories, getCatalogProducts } from "@/hooks/useCatalog";
+import {
+  getCatalogCategories,
+  getCatalogFacets,
+  getCatalogProducts,
+} from "@/hooks/useCatalog";
 import {
   parseCatalogFilters,
   type PageSearchParams,
@@ -46,7 +50,10 @@ async function CategoryListing({
   if (!category) notFound();
 
   const filters = parseCatalogFilters(searchParams, categories, slug);
-  const products = await getCatalogProducts(filters);
+  const [products, facets] = await Promise.all([
+    getCatalogProducts(filters),
+    getCatalogFacets(filters),
+  ]);
 
   return (
     <>
@@ -66,6 +73,7 @@ async function CategoryListing({
       <div className="grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <FilterSidebar
           categories={categories}
+          facets={facets}
           filters={filters}
           path={`/categories/${slug}`}
         />

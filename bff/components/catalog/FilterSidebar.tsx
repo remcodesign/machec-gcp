@@ -3,29 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { catalogBrands, filterLabels } from "@/lib/filterSchema";
+import { filterLabels } from "@/lib/filterSchema";
 import { catalogHref } from "@/lib/catalogParams";
-import type { Category, CatalogFilters } from "@/types/catalog";
+import type { Category, CatalogFacets, CatalogFilters } from "@/types/catalog";
 
 interface FilterSidebarProps {
   categories: Category[];
+  // getCatalogFacets() (D40 cache-aside) — every list here is already
+  // computed with every *other* currently-selected filter applied, so a
+  // value that can no longer be reached given the current selection is
+  // simply absent, never a separately-disabled option to filter out here.
+  facets: CatalogFacets;
   filters: CatalogFilters;
   path: string;
 }
-
-const options: Record<string, string[]> = {
-  component_type: [
-    "Aardlekschakelaar",
-    "Installatieautomaat",
-    "Hoofdschakelaar",
-  ],
-  amperage: ["16A", "40A", "63A"],
-  insert_type: ["Wandcontactdoos", "Schakelaar", "Dimmer"],
-  mounting: ["Inbouw", "Opbouw"],
-  cable_type: ["VD-draad", "XMvK-kabel", "YMvK-kabel"],
-  cores_and_thickness: ["1x2.5 mm²", "2x1.5 mm²", "3G2.5 mm²", "5G2.5 mm²"],
-  material_type: ["Lasdoppen", "Inbouwdozen", "Buizen"],
-};
 
 // Long enough that a full "216" (three keystrokes) doesn't fire three
 // requests against catalogCache.ts/PIM Core, short enough to still read as
@@ -52,6 +43,7 @@ function euroInputToCents(euros: string): string {
 
 export function FilterSidebar({
   categories,
+  facets,
   filters,
   path,
 }: FilterSidebarProps) {
@@ -89,7 +81,9 @@ export function FilterSidebar({
     // nothing (parseCatalogFilters always prefers the route's own slug).
     const destination =
       key === "category" && path.startsWith("/categories/")
-        ? (value ? `/categories/${value}` : "/products")
+        ? value
+          ? `/categories/${value}`
+          : "/products"
         : path;
 
     if (key === "category" && path.startsWith("/categories/")) {
@@ -197,11 +191,22 @@ export function FilterSidebar({
             className="mt-2 w-full rounded-none border border-stone-300 bg-white px-3 py-2 text-sm"
           >
             <option value="">Alle categorieën</option>
-            {categories.map((item) => (
-              <option key={item.slug} value={item.slug}>
-                {item.name}
-              </option>
-            ))}
+            {categories
+              // Narrowed to what facets.category (exclude-self) says is
+              // still reachable given brand/price — but the current route's
+              // own category always stays listed even if a since-applied
+              // filter would otherwise exclude it, so a /categories/[slug]
+              // page never renders a <select> whose own selected value is
+              // missing from its own options.
+              .filter(
+                (item) =>
+                  facets.category.includes(item.slug) || item.slug === category,
+              )
+              .map((item) => (
+                <option key={item.slug} value={item.slug}>
+                  {item.name}
+                </option>
+              ))}
           </select>
         </label>
         <label className="block text-sm font-medium text-stone-700">
@@ -212,7 +217,7 @@ export function FilterSidebar({
             className="mt-2 w-full rounded-none border border-stone-300 bg-white px-3 py-2 text-sm"
           >
             <option value="">Alle merken</option>
-            {catalogBrands.map((brand) => (
+            {facets.brand.map((brand) => (
               <option key={brand} value={brand}>
                 {brand}
               </option>
@@ -273,7 +278,7 @@ export function FilterSidebar({
               className="mt-2 w-full rounded-none border border-stone-300 bg-white px-3 py-2 text-sm"
             >
               <option value="">Alle opties</option>
-              {(options[key] ?? []).map((option) => (
+              {(facets.attributes[key] ?? []).map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>

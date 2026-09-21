@@ -13,6 +13,65 @@ function setGroepenkastFilterableAttributes(phpArrayLiteral: string) {
   );
 }
 
+// These two helpers make the pagination and category-narrowing tests below
+// independent of the exact seeded catalog size — dev DBs routinely pick up
+// ad-hoc categories/products beyond docs_local/pim-seed-catalog.json (e.g.
+// testing a new admin feature), and a hardcoded "12 products"/"5 options"
+// assertion breaks on that drift even though nothing storefront-side is
+// actually wrong. Both query PIM Core's DB directly (never through the BFF
+// or PIM Core's own read API) so they're a genuinely independent oracle,
+// not the same code path the test is trying to verify.
+function publishedProductCount(): number {
+  const output = execSync(
+    `ddev artisan tinker --execute "echo \\App\\Models\\Product::where('status','published')->count();"`,
+    { cwd: PIM_CORE_DIR },
+  ).toString();
+
+  return Number(output.trim());
+}
+
+function categorySlugsForBrand(brand: string): string[] {
+  const output = execSync(
+    `ddev artisan tinker --execute "echo \\App\\Models\\Product::where('brand','${brand}')->where('status','published')->with('category')->get()->pluck('category.slug')->unique()->sort()->values()->toJson();"`,
+    { cwd: PIM_CORE_DIR },
+  ).toString();
+
+  return JSON.parse(output.trim()) as string[];
+}
+
+function publishedProductCountForBrand(brand: string): number {
+  const output = execSync(
+    `ddev artisan tinker --execute "echo \\App\\Models\\Product::where('brand','${brand}')->where('status','published')->count();"`,
+    { cwd: PIM_CORE_DIR },
+  ).toString();
+
+  return Number(output.trim());
+}
+
+function publishedProductCountForCategoryAttribute(
+  categorySlug: string,
+  attributeKey: string,
+  value: string,
+): number {
+  const output = execSync(
+    `ddev artisan tinker --execute "echo \\App\\Models\\Product::where('status','published')->where('attributes->${attributeKey}','${value}')->whereRelation('category','slug','${categorySlug}')->count();"`,
+    { cwd: PIM_CORE_DIR },
+  ).toString();
+
+  return Number(output.trim());
+}
+
+// "€ 44,95" (nl-NL, lib/formatPrice.ts) → 4495 (price_cents) — lets a test
+// assert on the actual price a card renders instead of a hardcoded product
+// name/brand that only happens to be the one seed product in range today.
+function parsePriceCents(text: string): number {
+  const match = text.match(/([\d.]+),(\d{2})/);
+
+  if (!match) throw new Error(`Could not parse a price out of "${text}"`);
+
+  return Number(match[1].replaceAll(".", "")) * 100 + Number(match[2]);
+}
+
 // D40's cache-aside serves the category taxonomy from Firestore for up to
 // its TTL — bust the cached doc directly (the emulator's own REST API)
 // instead of waiting it out, so this test doesn't need a 60s sleep.
@@ -21,28 +80,41 @@ async function bustCategoriesCache() {
 }
 
 // Exercises the D40/D75 catalog-read path end to end against the real
-// backend (PIM Core's seeded demo catalog, docs_local/pim-seed-catalog.json:
-// 12 published products) rather than a mock, since the pagination and
-// single-SKU-lookup bugs this guards were both PIM Core response-shape bugs
-// that unit tests mocking the wrong shape never caught.
+// backend (PIM Core's seeded demo catalog, docs_local/pim-seed-catalog.json)
+// rather than a mock, since the pagination and single-SKU-lookup bugs this
+// guards were both PIM Core response-shape bugs that unit tests mocking the
+// wrong shape never caught.
 
 test("the all-products listing paginates the full published catalog 6 at a time instead of silently truncating to page 1", async ({
   page,
 }) => {
+  const total = publishedProductCount();
+  expect(total).toBeGreaterThan(0);
+
   await page.goto("/products");
 
   const cards = page.locator("article");
-  await expect(cards).toHaveCount(6);
+  await expect(cards).toHaveCount(Math.min(total, 6));
   await expect(
-    page.getByRole("main").getByText(/van 12 producten/).first(),
+    page
+      .getByRole("main")
+      .getByText(new RegExp(`van ${total} producten`))
+      .first(),
   ).toBeVisible();
+
+  if (total <= 6) {
+    // Nothing to paginate — the rest of this test only makes sense once a
+    // second page genuinely exists.
+    await expect(
+      page.getByRole("navigation", { name: "Paginering" }),
+    ).toHaveCount(0);
+    return;
+  }
 
   const pagination = page.getByRole("navigation", { name: "Paginering" });
   await expect(pagination).toBeVisible();
 
-  const firstPageNames = await page
-    .locator("article h3")
-    .allTextContents();
+  const firstPageNames = await page.locator("article h3").allTextContents();
 
   await pagination.getByRole("link", { name: "2" }).click();
 
@@ -54,9 +126,7 @@ test("the all-products listing paginates the full published catalog 6 at a time 
     firstPageNames[0] ?? "",
   );
 
-  const secondPageNames = await page
-    .locator("article h3")
-    .allTextContents();
+  const secondPageNames = await page.locator("article h3").allTextContents();
 
   for (const name of secondPageNames) {
     expect(firstPageNames).not.toContain(name);
@@ -83,14 +153,16 @@ test("the Producten nav link is marked active on /products and stays active on a
   page,
 }) => {
   await page.goto("/products");
-  await expect(
-    page.getByRole("link", { name: "Producten" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("link", { name: "Producten" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
 
   await page.goto("/products/prod_01");
-  await expect(
-    page.getByRole("link", { name: "Producten" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("link", { name: "Producten" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
   await expect(page.getByRole("link", { name: "Home" })).not.toHaveAttribute(
     "aria-current",
   );
@@ -101,24 +173,117 @@ test("selecting a brand filter applies it immediately, with no separate 'apply' 
 }) => {
   await page.goto("/products");
 
-  await page.getByLabel("Merk").selectOption("Gira");
+  const filterSidebar = page.getByRole("complementary", {
+    name: "Filter producten",
+  });
+  const brandSelect = filterSidebar.getByLabel("Merk");
+  // FilterSidebar streams in inside the same Suspense boundary as the
+  // product grid (D65) — allTextContents() below doesn't auto-wait the way
+  // a `toBeVisible()`/action-based call does, so without this the select
+  // can still be read while the page is showing its loading skeleton.
+  await expect(brandSelect).toBeVisible();
+  const brand = (await brandSelect.locator("option").allTextContents()).find(
+    (label) => label !== "Alle merken",
+  );
+  expect(brand).toBeTruthy();
 
-  await expect(page).toHaveURL(/brand=Gira/);
-  await expect(page.getByRole("main").getByText(/van 2 producten/).first()).toBeVisible();
+  const expectedCount = publishedProductCountForBrand(brand!);
+  expect(expectedCount).toBeGreaterThan(0);
+
+  await brandSelect.selectOption(brand!);
+
+  await expect(page).toHaveURL(
+    new RegExp(`brand=${encodeURIComponent(brand!)}`),
+  );
+  await expect(
+    page
+      .getByRole("main")
+      .getByText(new RegExp(`van ${expectedCount} producten`))
+      .first(),
+  ).toBeVisible();
+
   const cards = page.locator("article");
-  await expect(cards).toHaveCount(2);
-  for (const text of await page.locator("article").allTextContents()) {
-    expect(text).toContain("Gira");
+  await expect(cards).toHaveCount(Math.min(expectedCount, 6));
+  for (const text of await cards.allTextContents()) {
+    expect(text).toContain(brand);
   }
+});
+
+test("selecting a brand narrows the category select down to only the categories that brand still has products in", async ({
+  page,
+}) => {
+  await page.goto("/products");
+
+  const filterSidebar = page.getByRole("complementary", {
+    name: "Filter producten",
+  });
+  const categorySelect = filterSidebar.getByLabel("Categorie");
+  const brandSelect = filterSidebar.getByLabel("Merk");
+  // See the identical comment in the previous test — allTextContents()
+  // doesn't auto-wait for the Suspense-streamed sidebar to actually land.
+  await expect(brandSelect).toBeVisible();
+
+  // Picks whichever brand the sidebar itself lists first (getFacets()'s own
+  // brand list is already alphabetically sorted, PIM Core-side) instead of
+  // hardcoding one, so this test doesn't depend on a specific seeded brand
+  // still existing/still being scoped to one category.
+  const brand = (await brandSelect.locator("option").allTextContents()).find(
+    (label) => label !== "Alle merken",
+  );
+  expect(brand).toBeTruthy();
+
+  // Independent oracle: which category slugs that brand's published
+  // products actually reach, queried straight from PIM Core's DB — not
+  // derived from the same getCatalogFacets() call the sidebar itself uses,
+  // so a bug in that call can't accidentally make this test agree with it.
+  const expectedSlugs = categorySlugsForBrand(brand!).sort();
+
+  const allSlugsBefore = await categorySelect
+    .locator("option")
+    .evaluateAll((options) =>
+      options
+        .map((option) => (option as HTMLOptionElement).value)
+        .filter(Boolean),
+    );
+  // Only a meaningful regression guard if the picked brand doesn't already
+  // reach every category — otherwise selecting it would narrow nothing and
+  // the assertion below would pass even with the narrowing code removed.
+  expect(expectedSlugs.length).toBeLessThan(allSlugsBefore.length);
+
+  await brandSelect.selectOption(brand!);
+  await expect(page).toHaveURL(
+    new RegExp(`brand=${encodeURIComponent(brand!)}`),
+  );
+
+  const narrowedSlugs = await categorySelect
+    .locator("option")
+    .evaluateAll((options) =>
+      options
+        .map((option) => (option as HTMLOptionElement).value)
+        .filter(Boolean)
+        .sort(),
+    );
+
+  expect(narrowedSlugs).toEqual(expectedSlugs);
 });
 
 test("changing category on a /categories/[slug] page navigates to the new category's own path, clearing the previous category's attribute filter", async ({
   page,
 }) => {
-  await page.goto(
-    "/categories/groepenkast-componenten?amperage=16A",
+  const expectedCount = publishedProductCountForCategoryAttribute(
+    "groepenkast-componenten",
+    "amperage",
+    "16A",
   );
-  await expect(page.getByRole("main").getByText(/van 1 producten/).first()).toBeVisible();
+  expect(expectedCount).toBeGreaterThan(0);
+
+  await page.goto("/categories/groepenkast-componenten?amperage=16A");
+  await expect(
+    page
+      .getByRole("main")
+      .getByText(new RegExp(`van ${expectedCount} producten`))
+      .first(),
+  ).toBeVisible();
 
   const filterSidebar = page.getByRole("complementary", {
     name: "Filter producten",
@@ -176,10 +341,30 @@ test("filtering by a euro price range finds a product priced in between, convert
 
   await expect(page).toHaveURL(/price_max=4500/, { timeout: 8000 });
   await expect(
-    page.getByRole("main").getByText(/van \d+ producten/).first(),
+    page
+      .getByRole("main")
+      .getByText(/van \d+ producten/)
+      .first(),
   ).toBeVisible();
-  await expect(page.locator("article")).toHaveCount(1);
-  await expect(page.locator("article h3")).toContainText(/Donné/i);
+
+  // The bug being guarded against made this silently return zero results
+  // (searching for 45 cents, not €45) — the count itself isn't a fixed
+  // contract (whatever's seeded in this price band can grow), but "at
+  // least one result, and every result genuinely priced within the typed
+  // range" is the actual invariant a correct euro→cents conversion must
+  // satisfy.
+  const cards = page.locator("article");
+  await expect(cards.first()).toBeVisible();
+  const priceTexts = await cards
+    .locator("p", { hasText: "€" })
+    .allTextContents();
+  expect(priceTexts.length).toBeGreaterThan(0);
+
+  for (const text of priceTexts) {
+    const cents = parsePriceCents(text);
+    expect(cents).toBeGreaterThanOrEqual(0);
+    expect(cents).toBeLessThanOrEqual(4500);
+  }
 });
 
 test("a price_min filter with no price_max never 422s PIM Core's lte/gte comparison rule and still narrows the results", async ({
@@ -194,7 +379,10 @@ test("a price_min filter with no price_max never 422s PIM Core's lte/gte compari
 
   await expect(page.getByText(/PimClientError|HTTP 422/)).toHaveCount(0);
   await expect(
-    page.getByRole("main").getByText(/van \d+ producten/).first(),
+    page
+      .getByRole("main")
+      .getByText(/van \d+ producten/)
+      .first(),
   ).toBeVisible();
   const cards = page.locator("article");
   await expect(cards.first()).toBeVisible();

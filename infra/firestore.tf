@@ -28,6 +28,7 @@ locals {
   catalog_cache_ttl_collections = [
     "catalog_cache",         # category taxonomy singleton
     "catalog_listing_cache", # per filter/sort/page query signature
+    "catalog_facets_cache",  # per filter-combination reachable facet values (D40 extension)
     "products_read_model",   # per-SKU product lookup
   ]
 }

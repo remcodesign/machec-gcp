@@ -3,11 +3,17 @@ import type { Firestore, Timestamp } from "@google-cloud/firestore";
 import { getFirestoreClient } from "@/lib/firestoreClient";
 import type {
   CategoryListResponse,
+  CatalogFacets,
   CatalogFilters,
   Product,
   ProductListResponse,
 } from "@/types/catalog";
-import { getCategories, getProduct, getProducts } from "@/lib/pimClient";
+import {
+  getCategories,
+  getFacets,
+  getProduct,
+  getProducts,
+} from "@/lib/pimClient";
 
 const CACHE_TTL_SECONDS = 60;
 
@@ -22,6 +28,7 @@ interface CatalogCacheDependencies {
     getCategories: () => Promise<CategoryListResponse>;
     getProduct: (sku: string) => Promise<Product | null>;
     getProducts: (filters: CatalogFilters) => Promise<ProductListResponse>;
+    getFacets: (filters: CatalogFilters) => Promise<CatalogFacets>;
   };
   ttlSeconds?: number;
 }
@@ -41,6 +48,17 @@ function isFreshDocument<T>(value: unknown): value is CachedDocument<T> {
     isLiveTimestamp(value.expiresAt) &&
     value.expiresAt.toMillis() > Date.now()
   );
+}
+
+// Facets never depend on sort/page (§ pimClient.getFacets already drops
+// them from the outbound query too) — stripping them here as well means
+// /products?sort=price_asc&page=2 and /products reuse the same facets
+// cache entry instead of needlessly populating one per page/sort combo of
+// an otherwise identical filter set.
+function facetFilters(filters: CatalogFilters): CatalogFilters {
+  return Object.fromEntries(
+    Object.entries(filters).filter(([key]) => key !== "sort" && key !== "page"),
+  ) as CatalogFilters;
 }
 
 function listingCacheId(filters: CatalogFilters): string {
@@ -80,7 +98,7 @@ async function cached<T>(
 export function createCatalogCache(
   dependencies: CatalogCacheDependencies = {
     firestore: getFirestoreClient(),
-    pim: { getCategories, getProduct, getProducts },
+    pim: { getCategories, getProduct, getProducts, getFacets },
     ttlSeconds: CACHE_TTL_SECONDS,
   },
 ) {
@@ -112,6 +130,14 @@ export function createCatalogCache(
         "catalog_listing_cache",
         listingCacheId(filters),
         () => dependencies.pim.getProducts(filters),
+        ttlSeconds,
+      ),
+    getFacets: (filters: CatalogFilters = {}) =>
+      cached(
+        dependencies.firestore,
+        "catalog_facets_cache",
+        listingCacheId(facetFilters(filters)),
+        () => dependencies.pim.getFacets(filters),
         ttlSeconds,
       ),
   };

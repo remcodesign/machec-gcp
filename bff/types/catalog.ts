@@ -48,3 +48,19 @@ export interface CatalogFilters {
   page?: number;
   [key: string]: string | number | undefined;
 }
+
+// One entry per reachable value for a given field, computed by PIM Core
+// with every *other* currently-selected filter applied (never the field's
+// own selection — the same exclude-self shape ProductIndex.priceRange()
+// already uses admin-side) — so the list only ever narrows as more filters
+// are picked, it never has to fall back to disabling options client-side.
+export interface CatalogFacets {
+  brand: string[];
+  // Slugs still reachable given every *other* currently-selected filter —
+  // narrower than getCatalogCategories()'s full nav-tree taxonomy, which
+  // stays unaffected by this (D40). FilterSidebar intersects the two:
+  // render the full taxonomy's names, filtered down to slugs present here.
+  category: string[];
+  price_range: { min: number | null; max: number | null };
+  attributes: Record<string, string[]>;
+}
