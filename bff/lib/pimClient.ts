@@ -337,11 +337,22 @@ export async function getCategories(): Promise<CategoryListResponse> {
 // query — sort/page change what page of an already-resolved result set is
 // shown, never which values are still reachable, so both are dropped here
 // rather than forwarded as dead query params PIM Core would just ignore.
+//
+// status=published is forced here too, same as getProducts()/getProduct()
+// below — ListCatalogFacetsAction (PIM Core) only applies a status filter
+// when the caller's request explicitly includes one (it defaults to every
+// status, same as ListProductsAction), so without this a draft/archived
+// product's brand or attribute value shows up as a selectable option in
+// FilterSidebar even though selecting it can never return a product —
+// getProducts() already forces published for exactly this reason, this
+// call was just missing the same line.
 export async function getFacets(
   filters: CatalogFilters = {},
 ): Promise<CatalogFacets> {
   const facetFilters = Object.fromEntries(
-    Object.entries(filters).filter(([key]) => key !== "sort" && key !== "page"),
+    Object.entries({ ...filters, status: "published" }).filter(
+      ([key]) => key !== "sort" && key !== "page",
+    ),
   ) as CatalogFilters;
 
   return facetsValue(await request("facets", filtersQuery(facetFilters)));

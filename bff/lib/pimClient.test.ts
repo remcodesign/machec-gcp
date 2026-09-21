@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getCategories, getProduct, getProducts } = await import("./pimClient");
+const { getCategories, getFacets, getProduct, getProducts } =
+  await import("./pimClient");
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -53,6 +54,50 @@ describe("pimClient", () => {
       "Bearer test-token",
     );
     expect(new URL(url as string).searchParams.get("status")).toBe("published");
+  });
+
+  // Regression: ListCatalogFacetsAction (PIM Core) only applies status
+  // filtering when the request explicitly asks for it, same as
+  // ListProductsAction — without this, a draft/archived product's brand
+  // or attribute value showed up as a selectable FilterSidebar option
+  // even though selecting it could never return a product, since
+  // getProducts() (above) always forces published regardless.
+  it("getFacets sends the Bearer token and forces status=published regardless of caller input", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({
+        brand: ["ABB"],
+        category: ["groepenkast-componenten"],
+        price_range: { min: 100, max: 200 },
+        attributes: {},
+      }),
+    );
+
+    await getFacets({ status: "draft" } as never);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(new Headers(init.headers).get("Authorization")).toBe(
+      "Bearer test-token",
+    );
+    expect(new URL(url as string).searchParams.get("status")).toBe("published");
+  });
+
+  it("getFacets drops sort/page from the outbound query — neither is meaningful to a facets request", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({
+        brand: [],
+        category: [],
+        price_range: { min: null, max: null },
+        attributes: {},
+      }),
+    );
+
+    await getFacets({ brand: "ABB", sort: "price_asc", page: 2 });
+
+    const [url] = fetchMock.mock.calls[0];
+    const params = new URL(url as string).searchParams;
+    expect(params.get("brand")).toBe("ABB");
+    expect(params.has("sort")).toBe(false);
+    expect(params.has("page")).toBe(false);
   });
 
   it("a product with status draft never appears in the parsed listing, even if PIM includes it", async () => {
