@@ -32,6 +32,11 @@ resource "google_cloud_run_v2_service" "bff" {
       }
 
       env {
+        name  = "CUSTOMER_IDENTITY_URL"
+        value = var.customer_identity_url
+      }
+
+      env {
         name = "CATALOG_READ_TOKEN"
 
         value_source {

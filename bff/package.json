@@ -11,7 +11,7 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "knip": "knip",
-    "test": "node --test",
+    "test": "vitest run",
     "emulators": "firebase emulators:start --only firestore,pubsub --project machec-local"
   },
   "dependencies": {
@@ -22,15 +22,21 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.1.1",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.3.4",
     "firebase-tools": "^15.30.2",
+    "jsdom": "^29.1.1",
     "knip": "^6.37.0",
     "prettier": "^3.9.8",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.1"
   }
 }

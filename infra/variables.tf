@@ -24,3 +24,9 @@ variable "pim_core_url" {
   type        = string
   default     = "https://machec-pim-core-production-urlcxp.laravel.cloud/api/v1"
 }
+
+variable "customer_identity_url" {
+  description = "Production Customer & Identity base URL (no path suffix — authProxy.ts appends /api/v1/auth/*, /api/internal/v1/whoami, and /sanctum/csrf-cookie itself), injected into the BFF Cloud Run service as CUSTOMER_IDENTITY_URL. Never sourced from bff/.env.local — that file is local-dev-only (D83/D84); this is the deployed-environment equivalent, owned by Terraform (D115, Step 4.2)."
+  type        = string
+  default     = "https://machec-customer-identity-production-pi9kvt.laravel.cloud"
+}

@@ -7,6 +7,10 @@ import type { CatalogFilters } from "@/types/catalog";
 // each call is a separate Firestore round trip for the same document.
 export const getCatalogCategories = cache(() => catalogCache.getCategories());
 
-export const getCatalogProducts = cache((filters: CatalogFilters = {}) => catalogCache.getProducts(filters));
+export const getCatalogProducts = cache((filters: CatalogFilters = {}) =>
+  catalogCache.getProducts(filters),
+);
 
-export const getCatalogProduct = cache((sku: string) => catalogCache.getProduct(sku));
+export const getCatalogProduct = cache((sku: string) =>
+  catalogCache.getProduct(sku),
+);

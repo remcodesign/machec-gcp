@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { AuthProvider } from "@/hooks/useAuth";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,15 +23,28 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="nl" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="nl"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col bg-[#fffdf8] text-stone-950">
-        <SiteHeader />
-        <div className="flex-1">{children}</div>
-        <Suspense fallback={<div className="h-24 border-t border-stone-200 bg-stone-950" />}>
-          <SiteFooter />
-        </Suspense>
+        <AuthProvider>
+          <SiteHeader />
+          <div className="flex-1">{children}</div>
+          <Suspense
+            fallback={
+              <div className="h-24 border-t border-stone-200 bg-stone-950" />
+            }
+          >
+            <SiteFooter />
+          </Suspense>
+        </AuthProvider>
       </body>
     </html>
   );
