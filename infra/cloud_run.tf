@@ -50,6 +50,7 @@ resource "google_cloud_run_v2_service" "bff" {
     google_project_iam_member.bff_runtime_artifact_registry,
     google_project_iam_member.bff_runtime_firestore,
     google_secret_manager_secret_iam_member.bff_runtime_accessor,
+    google_firestore_database.database,
   ]
 }
 
