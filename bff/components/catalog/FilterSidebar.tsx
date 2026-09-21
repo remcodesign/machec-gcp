@@ -126,7 +126,7 @@ export function FilterSidebar({
           </label>
         ))}
         <button
-          className="w-full rounded-full bg-stone-950 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-700"
+          className="w-full cursor-pointer rounded-full bg-stone-950 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-700"
           type="submit"
         >
           Toon resultaten

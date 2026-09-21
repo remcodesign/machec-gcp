@@ -24,7 +24,7 @@ export function AccountMenu({ isLoading, onLogout, user }: AccountMenuProps) {
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-label={`Accountmenu van ${user.name}`}
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-600 font-semibold text-white transition hover:bg-amber-700"
+        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-amber-600 font-semibold text-white transition hover:bg-amber-700"
         onClick={() => setIsOpen((current) => !current)}
         type="button"
       >
@@ -37,7 +37,7 @@ export function AccountMenu({ isLoading, onLogout, user }: AccountMenuProps) {
         >
           <p className="px-3 py-2 text-sm text-stone-600">{user.name}</p>
           <button
-            className="w-full px-3 py-2 text-left text-sm font-medium text-stone-950 transition hover:bg-stone-100 disabled:opacity-60"
+            className="w-full cursor-pointer px-3 py-2 text-left text-sm font-medium text-stone-950 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isLoading}
             onClick={() => void handleLogout()}
             role="menuitem"

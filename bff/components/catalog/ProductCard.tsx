@@ -28,7 +28,7 @@ export function ProductCard({ layout = "grid", product }: ProductCardProps) {
           </p>
         </div>
         <button
-          className="self-center rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-400"
+          className="self-center cursor-not-allowed rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-400"
           disabled
         >
           Toevoegen
@@ -55,7 +55,7 @@ export function ProductCard({ layout = "grid", product }: ProductCardProps) {
       </Link>
       <div className="px-4 pb-4">
         <button
-          className="w-full rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-400"
+          className="w-full cursor-not-allowed rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-400"
           disabled
         >
           Toevoegen aan winkelmand

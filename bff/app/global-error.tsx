@@ -18,7 +18,7 @@ export default function GlobalError({
           De site kon niet worden geladen. Probeer het opnieuw.
         </p>
         <button
-          className="rounded-full bg-stone-950 px-5 py-2.5 text-sm font-medium text-white hover:bg-amber-700"
+          className="cursor-pointer rounded-full bg-stone-950 px-5 py-2.5 text-sm font-medium text-white hover:bg-amber-700"
           onClick={reset}
         >
           Opnieuw proberen

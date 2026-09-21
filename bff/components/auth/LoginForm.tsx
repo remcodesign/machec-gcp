@@ -59,7 +59,7 @@ export function LoginForm() {
         </p>
       ) : null}
       <button
-        className="w-full bg-stone-950 px-4 py-3 font-medium text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full cursor-pointer bg-stone-950 px-4 py-3 font-medium text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isLoading}
         type="submit"
       >
