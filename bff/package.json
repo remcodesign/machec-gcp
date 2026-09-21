@@ -1,0 +1,36 @@
+{
+  "name": "bff",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "knip": "knip",
+    "test": "node --test",
+    "emulators": "firebase emulators:start --only firestore,pubsub --project machec-local"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^9.2.0",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.3.4",
+    "firebase-tools": "^15.30.2",
+    "knip": "^6.37.0",
+    "prettier": "^3.9.8",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

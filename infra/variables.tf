@@ -8,3 +8,13 @@ variable "region" {
   type        = string
   default     = "europe-west4"
 }
+
+variable "image_tag" {
+  description = "Git-short-SHA tag for the BFF image already pushed to Artifact Registry before Cloud Run apply."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$", var.image_tag))
+    error_message = "image_tag must be a valid Artifact Registry tag."
+  }
+}

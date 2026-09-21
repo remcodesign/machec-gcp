@@ -1,0 +1,10 @@
+services:
+  gcp-emulators:
+    build:
+      context: .
+      dockerfile: Dockerfile.emulators
+    ports:
+      - "4001:4000"
+      - "8080:8080"
+      - "8085:8085"
+    restart: unless-stopped
