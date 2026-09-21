@@ -1,4 +1,24 @@
+import { execSync } from "node:child_process";
+import path from "node:path";
 import { expect, test } from "@playwright/test";
+
+const PIM_CORE_DIR = path.resolve(__dirname, "../../../machec-pim-core");
+const CATEGORIES_CACHE_DOC_URL =
+  "http://localhost:8080/v1/projects/machec-local/databases/(default)/documents/catalog_cache/categories";
+
+function setGroepenkastFilterableAttributes(phpArrayLiteral: string) {
+  execSync(
+    `ddev artisan tinker --execute "\\App\\Models\\Category::where('slug','groepenkast-componenten')->update(['filterable_attributes' => ${phpArrayLiteral}]);"`,
+    { cwd: PIM_CORE_DIR },
+  );
+}
+
+// D40's cache-aside serves the category taxonomy from Firestore for up to
+// its TTL — bust the cached doc directly (the emulator's own REST API)
+// instead of waiting it out, so this test doesn't need a 60s sleep.
+async function bustCategoriesCache() {
+  await fetch(CATEGORIES_CACHE_DOC_URL, { method: "DELETE" });
+}
 
 // Exercises the D40/D75 catalog-read path end to end against the real
 // backend (PIM Core's seeded demo catalog, docs_local/pim-seed-catalog.json:
@@ -210,4 +230,33 @@ test("Huidige selectie delen copies the current filtered URL to the clipboard an
   );
   expect(clipboardText).toBe(page.url());
   expect(clipboardText).toContain("brand=Gira");
+});
+
+test("a filterable_attributes change made directly in PIM Core's category record shows up in the storefront filter sidebar with no BFF code change, once the cache-aside entry refreshes", async ({
+  page,
+}) => {
+  // Proves lib/filterSchema.ts's category_conditional was actually removed
+  // as a second, static source of truth — mutates PIM Core's own category
+  // row (never this app's code) to add a brand-new attribute key, and
+  // expects it to reach the sidebar purely through getCatalogCategories()'s
+  // existing D40 cache-aside read.
+  try {
+    setGroepenkastFilterableAttributes(
+      "['component_type','amperage','voltage']",
+    );
+    await bustCategoriesCache();
+
+    await page.goto("/categories/groepenkast-componenten");
+
+    const filterSidebar = page.getByRole("complementary", {
+      name: "Filter producten",
+    });
+    // No Dutch label exists anywhere for "voltage" either — it falls back
+    // to the raw attribute key, same as filterLabels already does for any
+    // key it doesn't recognize.
+    await expect(filterSidebar.getByText("voltage")).toBeVisible();
+  } finally {
+    setGroepenkastFilterableAttributes("['component_type','amperage']");
+    await bustCategoriesCache();
+  }
 });

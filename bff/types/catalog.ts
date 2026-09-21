@@ -48,8 +48,3 @@ export interface CatalogFilters {
   page?: number;
   [key: string]: string | number | undefined;
 }
-
-export interface FilterSchema {
-  global: string[];
-  category_conditional: Record<string, string[]>;
-}

@@ -1,15 +1,7 @@
-import type { FilterSchema } from "@/types/catalog";
-
-export const filterSchema: FilterSchema = {
-  global: ["category", "brand", "price_range"],
-  category_conditional: {
-    "groepenkast-componenten": ["component_type", "amperage"],
-    schakelmateriaal: ["insert_type", "mounting"],
-    "kabels-draden": ["cable_type", "cores_and_thickness"],
-    installatiemateriaal: ["material_type"],
-  },
-};
-
+// Which attribute keys are filterable per category lives on the category
+// itself (Category.filterable_attributes, from PIM Core's own category
+// record via getCatalogCategories()'s D40 cache-aside) — not declared here,
+// so nothing in this file drifts the moment PIM Core's admin adds a new one.
 export const filterLabels: Record<string, string> = {
   category: "Categorie",
   brand: "Merk",

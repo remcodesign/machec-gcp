@@ -17,12 +17,12 @@ const categories: Category[] = [
   {
     slug: "groepenkast-componenten",
     name: "Groepenkasten",
-    filterable_attributes: [],
+    filterable_attributes: ["component_type", "amperage"],
   },
   {
     slug: "installatiemateriaal",
     name: "Installatiemateriaal",
-    filterable_attributes: [],
+    filterable_attributes: ["material_type"],
   },
 ];
 
@@ -76,6 +76,32 @@ describe("FilterSidebar", () => {
     expect(screen.getByText("Type materiaal")).toBeInTheDocument();
     expect(screen.queryByText("Amperage")).not.toBeInTheDocument();
     expect(screen.queryByText("Type component")).not.toBeInTheDocument();
+  });
+
+  it("a category's own filterable_attributes (live category data) drives which attribute selects render, not a static list", () => {
+    // No "voltage" key exists in any hardcoded schema anywhere in this
+    // app — it only exists because this test's own categories fixture
+    // declares it, standing in for PIM Core's admin adding a brand-new
+    // filterable attribute to a category.
+    const categoriesWithNewAttribute: Category[] = [
+      {
+        slug: "groepenkast-componenten",
+        name: "Groepenkasten",
+        filterable_attributes: ["voltage"],
+      },
+    ];
+
+    render(
+      <FilterSidebar
+        categories={categoriesWithNewAttribute}
+        filters={{ category: "groepenkast-componenten" }}
+        path="/categories/groepenkast-componenten"
+      />,
+    );
+
+    // filterLabels has no entry for "voltage" either — it falls back to
+    // the raw key, exactly as it already does for any unlabeled attribute.
+    expect(screen.getByText("voltage")).toBeInTheDocument();
   });
 
   it("the Wissen (clear) link resets to the bare path with no filters", () => {

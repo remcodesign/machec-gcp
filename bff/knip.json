@@ -1,3 +1,4 @@
 {
-  "entry": ["lib/firestoreClient.ts"]
+  "entry": ["lib/firestoreClient.ts"],
+  "ignoreBinaries": ["ddev"]
 }

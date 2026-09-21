@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { catalogBrands, filterLabels, filterSchema } from "@/lib/filterSchema";
+import { catalogBrands, filterLabels } from "@/lib/filterSchema";
 import { catalogHref } from "@/lib/catalogParams";
 import type { Category, CatalogFilters } from "@/types/catalog";
 
@@ -26,11 +26,6 @@ const options: Record<string, string[]> = {
   cores_and_thickness: ["1x2.5 mm²", "2x1.5 mm²", "3G2.5 mm²", "5G2.5 mm²"],
   material_type: ["Lasdoppen", "Inbouwdozen", "Buizen"],
 };
-
-// A category switch never carries a previous category's attribute filter
-// forward — parseCatalogFilters would just drop it server-side anyway, but
-// this keeps the URL itself from accumulating a now-meaningless query key.
-const allConditionalKeys = Object.values(filterSchema.category_conditional).flat();
 
 // Long enough that a full "216" (three keystrokes) doesn't fire three
 // requests against catalogCache.ts/PIM Core, short enough to still read as
@@ -65,9 +60,17 @@ export function FilterSidebar({
 
   const category =
     typeof filters.category === "string" ? filters.category : undefined;
-  const conditionalFilters = category
-    ? (filterSchema.category_conditional[category] ?? [])
-    : [];
+  // Sourced from live category data (getCatalogCategories(), D40
+  // cache-aside) rather than a static schema, so a filterable_attributes
+  // key PIM Core's admin adds shows up here with nothing to keep in sync.
+  const conditionalFilters =
+    categories.find((item) => item.slug === category)?.filterable_attributes ??
+    [];
+  // Every attribute key any category declares — used only to strip a
+  // now-irrelevant attribute filter from the URL when the category changes.
+  const allConditionalKeys = Array.from(
+    new Set(categories.flatMap((item) => item.filterable_attributes)),
+  );
 
   function navigate(nextParams: URLSearchParams, destination: string = path) {
     nextParams.delete("page");

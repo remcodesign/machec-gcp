@@ -19,12 +19,11 @@ export default async function CategoryPage({
   searchParams: Promise<PageSearchParams>;
 }) {
   const [{ slug }, rawSearchParams] = await Promise.all([params, searchParams]);
-  const filters = parseCatalogFilters(rawSearchParams, slug);
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-12 lg:px-8 lg:py-16">
       <Suspense fallback={<ProductCardSkeleton />}>
-        <CategoryListing slug={slug} filters={filters} />
+        <CategoryListing slug={slug} searchParams={rawSearchParams} />
       </Suspense>
     </main>
   );
@@ -32,18 +31,22 @@ export default async function CategoryPage({
 
 async function CategoryListing({
   slug,
-  filters,
+  searchParams,
 }: {
   slug: string;
-  filters: ReturnType<typeof parseCatalogFilters>;
+  searchParams: PageSearchParams;
 }) {
-  const [{ data: categories }, products] = await Promise.all([
-    getCatalogCategories(),
-    getCatalogProducts(filters),
-  ]);
+  // Categories are resolved first (D40 cache-aside — a Firestore hit on a
+  // warm cache, the common case) since parseCatalogFilters needs the
+  // resolved category's own filterable_attributes to know which attribute
+  // query params to forward — that list no longer lives in a static file.
+  const { data: categories } = await getCatalogCategories();
   const category = categories.find((item) => item.slug === slug);
 
   if (!category) notFound();
+
+  const filters = parseCatalogFilters(searchParams, categories, slug);
+  const products = await getCatalogProducts(filters);
 
   return (
     <>

@@ -1,5 +1,4 @@
-import { filterSchema } from "@/lib/filterSchema";
-import type { CatalogFilters, CatalogSort } from "@/types/catalog";
+import type { Category, CatalogFilters, CatalogSort } from "@/types/catalog";
 
 export type PageSearchParams = Record<string, string | string[] | undefined>;
 
@@ -16,6 +15,12 @@ function firstValue(value: string | string[] | undefined): string | undefined {
 
 export function parseCatalogFilters(
   searchParams: PageSearchParams,
+  // The live category list (getCatalogCategories(), D40 cache-aside) —
+  // Category.filterable_attributes is the single source of truth for which
+  // attribute keys a category accepts, so a key PIM Core's admin adds to a
+  // category shows up here automatically, with nothing in this app to keep
+  // in sync by hand.
+  categories: Category[],
   // /categories/[slug]/page.tsx's category comes from the route's own path
   // segment, never a "category" query-string key — without this override,
   // the category-conditional attribute keys below (amperage,
@@ -41,12 +46,13 @@ export function parseCatalogFilters(
     filters.sort = sort as CatalogSort;
   if (Number.isInteger(page) && page > 1) filters.page = page;
 
-  // Only forward category-conditional attribute filters declared in filterSchema.ts
-  // (lib/filterSchema.ts's single source of truth) — never an arbitrary/stale query key,
-  // and never an unrelated reserved-looking key such as `status`.
-  const allowedAttributeKeys = category
-    ? (filterSchema.category_conditional[category] ?? [])
-    : [];
+  // Only forward attribute filters the resolved category actually declares
+  // — never an arbitrary/stale query key, and never an unrelated
+  // reserved-looking key such as `status` (PIM Core forces status=published
+  // server-side regardless, but this keeps it out of the cache-aside key too).
+  const allowedAttributeKeys =
+    categories.find((item) => item.slug === category)?.filterable_attributes ??
+    [];
 
   for (const key of allowedAttributeKeys) {
     const value = firstValue(searchParams[key]);
