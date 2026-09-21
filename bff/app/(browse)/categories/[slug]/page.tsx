@@ -19,7 +19,7 @@ export default async function CategoryPage({
   searchParams: Promise<PageSearchParams>;
 }) {
   const [{ slug }, rawSearchParams] = await Promise.all([params, searchParams]);
-  const filters = { ...parseCatalogFilters(rawSearchParams), category: slug };
+  const filters = parseCatalogFilters(rawSearchParams, slug);
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-12 lg:px-8 lg:py-16">

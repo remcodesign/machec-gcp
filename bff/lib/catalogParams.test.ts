@@ -67,6 +67,27 @@ describe("parseCatalogFilters", () => {
   it("an empty-string filter value is treated as absent, not forwarded", () => {
     expect(parseCatalogFilters({ brand: "" })).toEqual({});
   });
+
+  it("a categoryOverride (the /categories/[slug] route's own path segment) still resolves that category's attribute filters, since the category never appears in the query string on that route", () => {
+    const filters = parseCatalogFilters(
+      { amperage: "16A" },
+      "groepenkast-componenten",
+    );
+
+    expect(filters).toEqual({
+      category: "groepenkast-componenten",
+      amperage: "16A",
+    });
+  });
+
+  it("a categoryOverride still rejects an attribute key that doesn't belong to that category", () => {
+    const filters = parseCatalogFilters(
+      { material_type: "Buizen" },
+      "groepenkast-componenten",
+    );
+
+    expect(filters).toEqual({ category: "groepenkast-componenten" });
+  });
 });
 
 describe("catalogHref", () => {

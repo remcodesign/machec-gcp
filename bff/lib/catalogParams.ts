@@ -16,10 +16,17 @@ function firstValue(value: string | string[] | undefined): string | undefined {
 
 export function parseCatalogFilters(
   searchParams: PageSearchParams,
+  // /categories/[slug]/page.tsx's category comes from the route's own path
+  // segment, never a "category" query-string key — without this override,
+  // the category-conditional attribute keys below (amperage,
+  // material_type, ...) can never be resolved on that route, so a
+  // category's own filter query params (e.g. ?amperage=16A) would be
+  // silently dropped instead of reaching catalogCache.ts/PIM Core.
+  categoryOverride?: string,
 ): CatalogFilters {
   const filters: CatalogFilters = {};
 
-  const category = firstValue(searchParams.category);
+  const category = categoryOverride ?? firstValue(searchParams.category);
   const brand = firstValue(searchParams.brand);
   const priceMin = firstValue(searchParams.price_min);
   const priceMax = firstValue(searchParams.price_max);
