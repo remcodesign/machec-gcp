@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+    <title id="title">Productafbeelding volgt</title>
+    <desc id="desc">Een neutrale placeholder voor een productafbeelding</desc>
+    <rect width="800" height="600" fill="#f5f5f4"/>
+    <path d="M275 390 355 305l65 65 48-55 86 75H275Z" fill="#d6d3d1"/>
+    <circle cx="500" cy="245" r="35" fill="#d6d3d1"/>
+    <rect x="230" y="175" width="340" height="260" rx="8" fill="none" stroke="#a8a29e" stroke-width="12"/>
+</svg>

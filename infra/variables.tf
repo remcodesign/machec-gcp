@@ -18,3 +18,9 @@ variable "image_tag" {
     error_message = "image_tag must be a valid Artifact Registry tag."
   }
 }
+
+variable "pim_core_url" {
+  description = "Production PIM Core read-API base URL, injected into the BFF Cloud Run service as PIM_CORE_URL. Never sourced from bff/.env.local — that file is local-dev-only (D83/D84); this is the deployed-environment equivalent, owned by Terraform."
+  type        = string
+  default     = "https://machec-pim-core-production-urlcxp.laravel.cloud/api/v1"
+}

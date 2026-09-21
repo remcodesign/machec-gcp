@@ -27,6 +27,11 @@ resource "google_cloud_run_v2_service" "bff" {
       }
 
       env {
+        name  = "PIM_CORE_URL"
+        value = var.pim_core_url
+      }
+
+      env {
         name = "CATALOG_READ_TOKEN"
 
         value_source {

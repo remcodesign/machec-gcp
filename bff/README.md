@@ -13,7 +13,10 @@ npm install
 npm run dev
 ```
 
-The app is available at http://localhost:3000.
+The development scripts enable Node's system CA support so host-side Next.js
+can trust the local DDEV HTTPS certificate.
+
+The app is available at [http://localhost:3000](http://localhost:3000).
 
 Start Firestore and Pub/Sub locally in Docker:
 
@@ -21,7 +24,13 @@ Start Firestore and Pub/Sub locally in Docker:
 docker compose up --build
 ```
 
-The emulator UI is available at http://localhost:4001 (mapped from the
+Then for the next.js server
+
+```bash
+npm run dev
+```
+
+The emulator UI is available at [http://localhost:4001](http://localhost:4001) (mapped from the
 container's port 4000 to sidestep local port-4000 conflicts, e.g. a stale
 Docker port-proxy from a previous run). Firestore listens on port 8080 and
 Pub/Sub listens on 8085. The local Firestore client uses the `machec-local`
@@ -30,6 +39,12 @@ emulator environment variables are set.
 
 For a local shell that uses the emulator, copy `.env.local.example` to
 `.env.local` and export the same variables before starting the app.
+
+Set `PIM_CORE_URL` to the local PimCore `/api/v1` base URL and provide the
+PimCore `catalog:read` token as `CATALOG_READ_TOKEN`. The token is required for
+catalog reads and is never sent to the browser. Firestore continues to use the
+emulator whenever `FIRESTORE_EMULATOR_HOST` is set; no application-code switch
+is needed.
 
 ## Verification
 
