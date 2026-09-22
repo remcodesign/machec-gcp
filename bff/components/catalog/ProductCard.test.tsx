@@ -50,4 +50,19 @@ describe("ProductCard", () => {
     render(<ProductCard layout="list" product={product} />);
     expect(screen.getByRole("button", { name: "Toevoegen" })).toBeDisabled();
   });
+
+  it("shows 'Op voorraad' when stock is not reported or above zero", () => {
+    render(<ProductCard product={product} />);
+    expect(screen.getByText("Op voorraad")).toBeInTheDocument();
+  });
+
+  it("shows 'Niet op voorraad' when stock is zero", () => {
+    render(<ProductCard product={{ ...product, stock: 0 }} />);
+    expect(screen.getByText("Niet op voorraad")).toBeInTheDocument();
+  });
+
+  it("list layout also renders the stock line", () => {
+    render(<ProductCard layout="list" product={{ ...product, stock: 0 }} />);
+    expect(screen.getByText("Niet op voorraad")).toBeInTheDocument();
+  });
 });

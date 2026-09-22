@@ -1,23 +1,12 @@
 import Link from "next/link";
 import { GhostImage } from "@/components/catalog/GhostImage";
 import { formatPrice } from "@/lib/formatPrice";
+import { stockLabel } from "@/lib/stockLabel";
 import type { Category, Product } from "@/types/catalog";
 
 interface ProductDetailProps {
   category?: Category;
   product: Product;
-}
-
-function stockLabel(stock: number | undefined): {
-  text: string;
-  className: string;
-} {
-  if (stock === undefined)
-    return { text: "Op voorraad", className: "text-emerald-700" };
-  if (stock <= 0)
-    return { text: "Niet op voorraad", className: "text-red-700" };
-
-  return { text: "Op voorraad", className: "text-emerald-700" };
 }
 
 export function ProductDetail({ category, product }: ProductDetailProps) {
