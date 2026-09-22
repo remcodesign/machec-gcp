@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -13,7 +14,15 @@ function navLinkClassName(isActive: boolean): string {
     : `${base} border-transparent`;
 }
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  // A Server Component slot (app/layout.tsx's <Suspense><CartCountBadge />),
+  // never a plain number — computing the count here would mean this
+  // component's own caller has to await it, putting it back on the
+  // navigation-blocking path this shape exists to avoid.
+  cartBadge?: ReactNode;
+}
+
+export function SiteHeader({ cartBadge }: SiteHeaderProps) {
   const { isLoading, logout, user } = useAuth();
   const pathname = usePathname();
   const isHomeActive = pathname === "/";
@@ -54,6 +63,7 @@ export function SiteHeader() {
             aria-current={isCartActive ? "page" : undefined}
           >
             Winkelmand
+            {cartBadge}
           </Link>
           {user ? (
             <AccountMenu isLoading={isLoading} onLogout={logout} user={user} />

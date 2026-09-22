@@ -1,7 +1,19 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { ProductDetail } from "./ProductDetail";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import type { Category, Product } from "@/types/catalog";
+
+const addItemMock = vi.fn().mockResolvedValue(true);
+
+vi.mock("@/hooks/useCart", () => ({
+  useCart: () => ({
+    addItem: addItemMock,
+    setQuantity: vi.fn(),
+    isSubmitting: false,
+    error: null,
+  }),
+}));
+
+const { ProductDetail } = await import("./ProductDetail");
 
 const product: Product = {
   sku: "SKU-1",
@@ -67,10 +79,30 @@ describe("ProductDetail", () => {
     expect(screen.getByText("Op voorraad")).toBeInTheDocument();
   });
 
-  it("the Add to cart button is a deliberate no-op (D73)", () => {
+  it("clicking Add to cart adds this product to the cart via useCart", () => {
     render(<ProductDetail category={category} product={product} />);
-    expect(
-      screen.getByRole("button", { name: "Toevoegen aan winkelmand" }),
-    ).toBeDisabled();
+    const button = screen.getByRole("button", {
+      name: "Toevoegen aan winkelmand",
+    });
+    expect(button).not.toBeDisabled();
+
+    fireEvent.click(button);
+
+    expect(addItemMock).toHaveBeenCalledWith("SKU-1");
+  });
+
+  it("Add to cart is disabled on a product whose cached stock is zero", () => {
+    addItemMock.mockClear();
+    render(
+      <ProductDetail category={category} product={{ ...product, stock: 0 }} />,
+    );
+    const button = screen.getByRole("button", {
+      name: "Toevoegen aan winkelmand",
+    });
+    expect(button).toBeDisabled();
+
+    fireEvent.click(button);
+
+    expect(addItemMock).not.toHaveBeenCalled();
   });
 });

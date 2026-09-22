@@ -1,7 +1,19 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { ProductCard } from "./ProductCard";
+import { describe, expect, it, vi } from "vitest";
 import type { Product } from "@/types/catalog";
+
+const addItemMock = vi.fn().mockResolvedValue(true);
+
+vi.mock("@/hooks/useCart", () => ({
+  useCart: () => ({
+    addItem: addItemMock,
+    setQuantity: vi.fn(),
+    isSubmitting: false,
+    error: null,
+  }),
+}));
+
+const { ProductCard } = await import("./ProductCard");
 
 const product: Product = {
   sku: "SKU-1",
@@ -28,14 +40,29 @@ describe("ProductCard", () => {
     expect(screen.getByRole("link")).toHaveAttribute("href", "/products/SKU-1");
   });
 
-  it("clicking Add to cart is a deliberate no-op (D73) — disabled, no click handler", () => {
+  it("clicking Add to cart on ProductCard now adds that product to the cart", () => {
     render(<ProductCard product={product} />);
     const button = screen.getByRole("button", {
       name: "Toevoegen aan winkelmand",
     });
-    expect(button).toBeDisabled();
+    expect(button).not.toBeDisabled();
+
     fireEvent.click(button);
-    // still disabled, nothing to assert changed — a disabled button fires no click
+
+    expect(addItemMock).toHaveBeenCalledWith("SKU-1");
+  });
+
+  it("Add to cart is disabled on a product whose cached stock is zero", () => {
+    addItemMock.mockClear();
+    render(<ProductCard product={{ ...product, stock: 0 }} />);
+    const button = screen.getByRole("button", {
+      name: "Toevoegen aan winkelmand",
+    });
+    expect(button).toBeDisabled();
+
+    fireEvent.click(button);
+
+    expect(addItemMock).not.toHaveBeenCalled();
   });
 
   it("renders the shared ghost image placeholder", () => {
@@ -46,8 +73,19 @@ describe("ProductCard", () => {
     );
   });
 
-  it("list layout renders a horizontal row with its own disabled Add to cart stub", () => {
+  it("list layout renders a horizontal row with its own Add to cart button", () => {
     render(<ProductCard layout="list" product={product} />);
+    const button = screen.getByRole("button", { name: "Toevoegen" });
+    expect(button).not.toBeDisabled();
+
+    fireEvent.click(button);
+
+    expect(addItemMock).toHaveBeenCalledWith("SKU-1");
+  });
+
+  it("list layout also disables Add to cart when stock is zero", () => {
+    addItemMock.mockClear();
+    render(<ProductCard layout="list" product={{ ...product, stock: 0 }} />);
     expect(screen.getByRole("button", { name: "Toevoegen" })).toBeDisabled();
   });
 

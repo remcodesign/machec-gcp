@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { GhostImage } from "@/components/catalog/GhostImage";
 import { formatPrice } from "@/lib/formatPrice";
 import { stockLabel } from "@/lib/stockLabel";
@@ -36,12 +37,11 @@ export function ProductDetail({ category, product }: ProductDetailProps) {
           {formatPrice(product.price_cents)}
         </p>
         <p className={`mt-3 text-sm ${stock.className}`}>{stock.text}</p>
-        <button
-          className="mt-8 w-full rounded-full bg-stone-950 px-6 py-3 font-medium text-white disabled:cursor-not-allowed disabled:bg-stone-300"
-          disabled
-        >
-          Toevoegen aan winkelmand
-        </button>
+        <AddToCartButton
+          className="mt-8 w-full cursor-pointer rounded-full bg-stone-950 px-6 py-3 font-medium text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-stone-300"
+          label="Toevoegen aan winkelmand"
+          product={product}
+        />
         <dl className="mt-10 divide-y divide-stone-200 border-y border-stone-200">
           {attributeKeys.map((key) => (
             <div key={key} className="flex justify-between gap-5 py-3 text-sm">

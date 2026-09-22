@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
+import { CartCountBadge } from "@/components/layout/CartCountBadge";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -35,7 +36,13 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col bg-[#fffdf8] text-stone-950">
         <AuthProvider>
-          <SiteHeader />
+          <SiteHeader
+            cartBadge={
+              <Suspense fallback={null}>
+                <CartCountBadge />
+              </Suspense>
+            }
+          />
           <div className="flex-1">{children}</div>
           <Suspense
             fallback={

@@ -71,6 +71,34 @@ describe("SiteHeader", () => {
     );
   });
 
+  it("shows a plain Winkelmand link when no cartBadge slot is given", () => {
+    useAuthMock.mockReturnValue({
+      user: null,
+      isLoading: false,
+      logout: vi.fn(),
+    });
+
+    render(<SiteHeader />);
+
+    expect(
+      screen.getByRole("link", { name: "Winkelmand" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders whatever the cartBadge slot passes, appended after Winkelmand", () => {
+    useAuthMock.mockReturnValue({
+      user: null,
+      isLoading: false,
+      logout: vi.fn(),
+    });
+
+    render(<SiteHeader cartBadge={<> (4)</>} />);
+
+    expect(
+      screen.getByRole("link", { name: "Winkelmand (4)" }),
+    ).toHaveAttribute("href", "/cart");
+  });
+
   it("marks Producten as the active nav link on /products and on a product detail page", () => {
     useAuthMock.mockReturnValue({
       user: null,

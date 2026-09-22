@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { GhostImage } from "@/components/catalog/GhostImage";
 import { formatPrice } from "@/lib/formatPrice";
 import { stockLabel } from "@/lib/stockLabel";
@@ -33,12 +34,11 @@ export function ProductCard({ layout = "grid", product }: ProductCardProps) {
             {stock.text}
           </p>
         </div>
-        <button
-          className="self-center cursor-not-allowed rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-400"
-          disabled
-        >
-          Toevoegen
-        </button>
+        <AddToCartButton
+          className="self-center cursor-pointer rounded-full border border-stone-950 bg-stone-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:border-stone-300 disabled:bg-transparent disabled:text-stone-400"
+          label="Toevoegen"
+          product={product}
+        />
       </article>
     );
   }
@@ -73,12 +73,11 @@ export function ProductCard({ layout = "grid", product }: ProductCardProps) {
         </div>
       </Link>
       <div className="px-4 pb-4">
-        <button
-          className="w-full cursor-not-allowed rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-400"
-          disabled
-        >
-          Toevoegen aan winkelmand
-        </button>
+        <AddToCartButton
+          className="w-full cursor-pointer rounded-full bg-stone-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:text-stone-500"
+          label="Toevoegen aan winkelmand"
+          product={product}
+        />
       </div>
     </article>
   );

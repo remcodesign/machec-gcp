@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ProductGrid } from "./ProductGrid";
 import type { Product } from "@/types/catalog";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const products: Product[] = [
   {
